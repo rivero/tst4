@@ -49,12 +49,11 @@ namespace data
     {
         for(auto& [variant, stopsVec]: variantStopsMap)
         {
-            qDebug() << "Variant: " << variant;
+            qDebug() << "\nVariant: " << variant;
             for(auto& stops: stopsVec)
             {
                 if (longPrint)
-                    stops.m_longPrint = longPrint;
-                stops.dPrint();
+                    stops.dPrint();
                 auto dist = stops.calcDistance();
                 distances.insert({dist, variant});
                 qDebug() << "Total distance: " << dist;
@@ -95,6 +94,13 @@ namespace readers
         data::readStopsFile("16-0-ASTERISK");
         data::readStopsFile("16-0-B");
         data::readStopsFile("16-0-K");
+        data::readStopsFile("16-0-M");
+        data::readStopsFile("16-1-ASTERISK");
+        data::readStopsFile("16-1-HASHHASH");
+        data::readStopsFile("16-1-K");
+        data::readStopsFile("16-1-L");
+        data::readStopsFile("16-1-P");
+        data::readStopsFile("16-1-V");
         data::printStopsMap(false); // no long print
     }
 }
