@@ -120,8 +120,8 @@ class Stop : public Id, public Abbr
 {
     Street m_street;
     CrossStreet m_crossStreet;
-    Geo m_geo;
 public:
+    Geo m_geo;
     Utm m_utm;
 
     Stop() = default;
@@ -170,12 +170,30 @@ public:
     }
 };
 
+struct MidPoint
+{
+    Stop m_stop;
+    std::uint64_t m_distance{};
+};
+
 class Stops
 {
     std::map<int, Stop> m_map;
     std::uint64_t m_distance{};
+    MidPoint m_midPoint;
 public:
     Stops() = default;
+    /*
+        Calculate the following
+        > Find the longest Variant by total travelling distance from first to last stop.
+
+        Assume the first stop is
+        connected to the second(crow flies), and the second to the 3rd, and so on, for path calculation.
+        For example, list of stops for Variant 16-1-L returned by query "stops?variant=16-1-L" is the order in which
+        the bus visits them and assume that there is a straight-line path between each set of consecutive stops.
+        * Output the result to console with Variant key, name, and length in meters in descending order by
+        length.
+    */
     Stops(const QDomElement& root)
     {
         QDomNodeList stops = root.elementsByTagName("stop");
@@ -184,14 +202,14 @@ public:
         {
             QDomElement stop = stops.at(i).toElement();
             Stop st(stop);
-            m_map[std::stoi(st.m_number.toStdString())] = st;
+            m_map[st.m_number.toInt()] = st;
             if(prevUtm.m_lat.isEmpty())
             {
                 prevUtm = st.m_utm;
                 continue;
             }
             Utm thisUtm = st.m_utm;
-            m_distance += Utm::planarDistance(prevUtm, thisUtm);
+            m_distance += Utm::planarDistance(prevUtm, thisUtm); // total distance is calculated here
             prevUtm = thisUtm;
         }
     }
@@ -206,6 +224,35 @@ public:
     std::uint64_t calcDistance()
     {
         return m_distance;
+    }
+    /*
+        > Find the mid-way/half-distance point coordinates on the longest Variant by length.
+        * Output the Variant key, name, total length(meters), and the mid-point coordinates to console.
+    */
+    MidPoint calcMidPoint()
+    {
+        // iterate the stop map and find where the distance calculated is about mid point meaning
+        // the previous distance is less and the next distance is grater.
+        // Store
+        auto midDistance = m_distance/2;
+        std::uint64_t localDistance{};
+        Stop prevStop;
+        for (auto& [number, stop] : m_map)
+        {
+            if(prevStop.m_number.isEmpty())
+            {
+                prevStop = stop;
+                continue;
+            }
+            localDistance += Utm::planarDistance(prevStop.m_utm, stop.m_utm);
+            if(localDistance > midDistance )
+            {
+                m_midPoint.m_stop = prevStop;
+                m_midPoint.m_distance = localDistance;
+                break;
+            }
+        }
+        return m_midPoint;
     }
 };
 

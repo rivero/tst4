@@ -57,6 +57,7 @@ namespace data
     }
 
     set < pair<uint64_t, QString> > distances;
+    map<QString, MidPoint> midPoints;
     void printStopsMap(bool longPrint = false)
     {
         for(auto& [variant, stopsVec]: variantStopsMap)
@@ -69,11 +70,29 @@ namespace data
                 auto dist = stops.calcDistance();
                 distances.insert({dist, variant});
                 qDebug() << "Total distance: " << dist;
+
+                /*
+                    > Find the mid-way/half-distance point coordinates on the longest Variant by length.
+                    * Output the Variant key, name, total length(meters), and the mid-point coordinates to console.
+                */
+                midPoints[variant] = stops.calcMidPoint();
             }
         }
-
-        auto biggest = *distances.rbegin();
-        qInfo() << "Largest distance so far: [" << biggest.second << "] : " << biggest.first << " meters";
+        // Based on distance calculation, largest distance is displayed here.
+        // Output the result to console with Variant key, name, and length in meters in descending order by length.
+        for(auto & [distance, variantName]: distances)
+        {
+            qInfo() << "Variant: " << variantName << "distance:" << distance;
+        }
+        auto [distance, variant] = *distances.rbegin();
+        qInfo() << "Largest distance so far: [" << variant << "] : " << distance << " meters";
+        /*
+            > Find the mid-way/half-distance point coordinates on the longest Variant by length.
+            * Output the Variant key, name, total length(meters), and the mid-point coordinates to console.
+        */
+        auto midPoint = midPoints[variant];
+        qInfo() << "Mid point for " << variant << "distance" << midPoint.m_distance;
+        midPoint.m_stop.m_geo.dPrint();
 
     }
 
@@ -104,15 +123,15 @@ namespace readers
     void readStops()
     {
         data::readStopsFile("16-0-ASTERISK");
-        data::readStopsFile("16-0-B");
-        data::readStopsFile("16-0-K");
-        data::readStopsFile("16-0-M");
-        data::readStopsFile("16-1-ASTERISK");
-        data::readStopsFile("16-1-HASHHASH");
-        data::readStopsFile("16-1-K");
-        data::readStopsFile("16-1-L");
-        data::readStopsFile("16-1-P");
-        data::readStopsFile("16-1-V");
+        //data::readStopsFile("16-0-B");
+        //data::readStopsFile("16-0-K");
+        //data::readStopsFile("16-0-M");
+        //data::readStopsFile("16-1-ASTERISK");
+        //data::readStopsFile("16-1-HASHHASH");
+        //data::readStopsFile("16-1-K");
+        //data::readStopsFile("16-1-L");
+        //data::readStopsFile("16-1-P");
+        //data::readStopsFile("16-1-V");
         data::printStopsMap(false); // no long print
     }
 }
