@@ -12,7 +12,7 @@
 
 using namespace std;
 const QString API_KEY("api-key=hDk1zowO1Y0FTNOXy3Ut");
-
+const QString Download_Folder("C:/tools/repos/tst4/xml/");
 namespace data
 {
     template <typename T, typename U>
@@ -21,7 +21,9 @@ namespace data
     template <typename T, typename U>
     void readFile(T route, const QString& file)
     {
-        FileReader reader(file);
+        QString theFile = Download_Folder + file + QString("_") +  QString::number(route) +  ".xml";
+        // looks like this? "C:/tools/repos/tst4/xml/variants_16.xml"
+        FileReader reader(theFile);
         if (reader.parseXML())
         {
             U variants(reader.getRoot());
@@ -30,8 +32,10 @@ namespace data
     }
 
     unordered_map<QString, vector<Stops> > variantStopsMap;
-    void readStopsFile(const QString& variant, const QString& file)
+    void readStopsFile(const QString& variant)
     {
+        // , "C:/tools/repos/tst4/xml/stops_16-0-ASTERISK.xml"
+        QString file = Download_Folder + QString("stops_") + variant + ".xml";
         FileReader reader(file);
         if (reader.parseXML())
         {
@@ -82,15 +86,15 @@ namespace readers
     // Where I stored them.
     void readVariants()
     {
-        data::readFile<int, Variants>(16, "C:/tools/repos/tst4/xml/variants_16.xml");
+        data::readFile<int, Variants>(16, "variants");
         printStopHttpRequests<int, Variants>();
     }
     // Stops downloaded. Read, and calculate distance
     void readStops()
     {
-        data::readStopsFile("16-0-ASTERISK", "C:/tools/repos/tst4/xml/stops_16-0-ASTERISK.xml");
-        data::readStopsFile("16-0-B", "C:/tools/repos/tst4/xml/stops_16-0-B.xml");
-        data::readStopsFile("16-0-K", "C:/tools/repos/tst4/xml/stops_16-0-X.xml");
+        data::readStopsFile("16-0-ASTERISK");
+        data::readStopsFile("16-0-B");
+        data::readStopsFile("16-0-K");
         data::printStopsMap(false); // no long print
     }
 }
