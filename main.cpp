@@ -24,24 +24,43 @@ namespace data
         {
             U variants(reader.getRoot());
             variantsMap<T,U>[route] = variants;
-            //variants.dPrint();
-            variants.printStopHttpRequests(); // To download the stops
         }
     }
 }
 
-namespace variants
+namespace readers
 {
+    template <typename T, typename U>
+    void printHttp()
+    {
+        for (auto& [key, value] : data::variantsMap<T,U> )
+        {
+            value.printStopHttpRequests(); // To download the stops
+        }
+    }
+    template <typename T, typename U>
+    void print()
+    {
+        for (auto& [key, value] : data::variantsMap<T,U> )
+        {
+            value.dPrint(); // To download the stops
+        }
+    }
     void readVariants()
     {
         data::readFile<int, Variants>(16, "C:/tools/repos/tst4/xml/variants_16.xml");
+        printHttp<int, Variants>();
     }
-
+    void readStops()
+    {
+        data::readFile<QString, Stops>("16-0-ASTERISK", "C:/tools/repos/tst4/xml/stops_16-0-ASTERISK.xml");
+        print<QString, Stops>();
+    }
 }
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    variants::readVariants();
+    readers::readVariants();
     return a.exec();
 }
