@@ -31,6 +31,13 @@ The code processes XML files containing bus stop information for different varia
 - The program assumes a straight-line path between consecutive stops for distance calculation.
 - Stop data is organized by variant.
 - The longest variant is determined based on total traveling distance.
+- QT Creator version info:
+
+Product: Qt Creator 13.0.2
+Based on: Qt 6.6.3 (MSVC 2019, x86_64)
+Built on: Jun  5 2024 07:17:53
+From revision: 1ad2c04e0e
+
 
 ## Contact
 
