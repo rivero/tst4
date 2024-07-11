@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <limits>
 
 using namespace std;
 /*
@@ -25,7 +26,7 @@ sr.jrivero@gmail.com
 */
 const QString API_KEY("api-key=hDk1zowO1Y0FTNOXy3Ut");
 const QString Download_Folder("C:/tools/repos/tst4/xml/");
-std::set<Location> Stops::m_UtmOrganized;
+Box Stops::m_boundingBox;
 
 namespace data
 {
@@ -94,18 +95,23 @@ namespace data
             qInfo() << "Variant: " << variantName << "distance:" << distance;
         }
         auto [distance, variant] = *distances.rbegin();
-        qInfo() << "Largest distance so far: [" << variant << "] : " << distance << " meters";
-        /*
-            > Find the mid-way/half-distance point coordinates on the longest Variant by length.
-            * Output the Variant key, name, total length(meters), and the mid-point coordinates to console.
-        */
+        qInfo() << "Responses:\nCalculate the following\n \
+        > Find the longest Variant by total travelling distance from first to last stop.\n\
+        Assume the first stop is connected to the second(crow flies), and the second to the 3rd, and so on, for path calculation.\n\
+        For example, list of stops for Variant 16-1-L returned by query \"stops?variant=16-1-L\" is the order in which\n\
+        the bus visits them and assume that there is a straight-line path between each set of consecutive stops.\n\
+        * Output the result to console with Variant key, name, and length in meters in descending order by length.";
+        qInfo() << "\nLongest Variant: [" << variant << "] : " << distance << " meters";
+
+        qInfo() << "\n> Find the mid-way/half-distance point coordinates on the longest Variant by length.\n\
+                       * Output the Variant key, name, total length(meters), and the mid-point coordinates to console.";
         auto midPoint = midPoints[variant];
-        qInfo() << "Mid point for " << variant << "distance" << midPoint.m_distance;
+        qInfo() << "\nMid point for [" << variant << "] distance: " << midPoint.m_distance << "meters";
         midPoint.m_stop.m_geo.dPrint();
 
-        qInfo() << "Maximum Distance" << Stops::maxDistance();
+        qInfo() << "\nMaximum Distance" << Stops::maxDistance();
         auto boundingBox = Stops::boundingBox();
-        qInfo() << "Bounding Box: Upper left";
+        qInfo() << "\nBounding Box:\nUpper left";
         boundingBox.upperLeft.printLocation();
         qInfo() << "Lower Right";
         boundingBox.bottomRight.printLocation();
@@ -202,6 +208,9 @@ namespace readers
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+
+    Stops::setBoundingBox();
+
     // readers::readVariants(); only needed first time
     readers::readStops();
     return a.exec();

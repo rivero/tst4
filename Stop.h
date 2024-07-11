@@ -50,10 +50,41 @@ public:
     }
 };
 
-struct Location
+class Location
 {
     QString m_lat, m_lon, m_xStr, m_yStr;
-    double m_x{}, m_y{};
+    std::uint64_t m_x{}, m_y{};
+public:
+    QString lat() const
+    {
+        return m_lat;
+    }
+    QString lon() const
+    {
+        return m_lon;
+    }
+    void lat(const QString& l)
+    {
+        m_lat = l;
+    }
+    void lon(const QString& l)
+    {
+        m_lon = l;
+    }
+    bool empty() const
+    {
+        return m_lat.isEmpty();
+    }
+    void x(std::uint64_t X)
+    {
+        m_x = X;
+        m_xStr = QString::number(m_x);
+    }
+    void y(std::uint64_t Y)
+    {
+        m_y = Y;
+        m_yStr = QString::number(m_y);
+    }
     virtual void printLocation() const
     {
         qDebug() << "\t" << m_xStr << m_lat;
@@ -68,11 +99,11 @@ struct Location
         m_x = std::stod(m_lat.toStdString());
         m_y = std::stod(m_lon.toStdString());
     }
-    double x() const
+    std::uint64_t x() const
     {
         return m_x;
     }
-    double y() const
+    std::uint64_t y() const
     {
         return m_y;
     }
@@ -115,10 +146,10 @@ public:
         printLocation();
     }
     // Calculate planar distance
-    static double planarDistance(double E1, double N1, double E2, double N2)
+    static double planarDistance(std::uint64_t E1, std::uint64_t N1, std::uint64_t E2, std::uint64_t N2)
     {
-        double dE = E2 - E1;
-        double dN = N2 - N1;
+        std::uint64_t dE = E2 - E1;
+        std::uint64_t dN = N2 - N1;
         return std::sqrt(dE * dE + dN * dN);
     }
     static double planarDistance(const Location& u1, const Location& u2)
@@ -191,6 +222,7 @@ struct MidPoint
 struct Box
 {
     Location upperLeft{}, bottomRight{};
+    QString m_lat, m_lon;
 };
 
 class Stops
@@ -198,41 +230,49 @@ class Stops
     std::map<int, Stop> m_map;
     std::uint64_t m_distance{};
     MidPoint m_midPoint;
-    static std::set<Location> m_UtmOrganized;
-public:
-    static const std::set<Location>& UtmOrganized()
+    void setBoundingBox(const Location& l)
     {
-        return m_UtmOrganized;
+        if (m_boundingBox.upperLeft.x() > l.x())
+        {
+            m_boundingBox.upperLeft.x(l.x());
+            m_boundingBox.upperLeft.lat(l.lat());
+        }
+        if (m_boundingBox.upperLeft.y() > l.y())
+        {
+            m_boundingBox.upperLeft.y(l.y());
+            m_boundingBox.upperLeft.lon(l.lon());
+        }
+
+        if (m_boundingBox.bottomRight.x() < l.x())
+        {
+            m_boundingBox.bottomRight.x(l.x());
+            m_boundingBox.bottomRight.lat(l.lat());
+        }
+        if (m_boundingBox.bottomRight.y() < l.y())
+        {
+            m_boundingBox.bottomRight.y(l.y());
+            m_boundingBox.bottomRight.lon(l.lon());
+        }
+    }
+    static Box m_boundingBox;
+public:
+    static void setBoundingBox()
+    {
+        m_boundingBox.upperLeft.x(std::numeric_limits<std::uint64_t>::max());
+        m_boundingBox.upperLeft.y(std::numeric_limits<std::uint64_t>::max());
+
+        m_boundingBox.bottomRight.x(std::numeric_limits<std::uint64_t>::min());
+        m_boundingBox.bottomRight.y(std::numeric_limits<std::uint64_t>::min());
+
+    }
+    static const Box& boundingBox()
+    {
+        return m_boundingBox;
     }
     static std::uint64_t maxDistance()
     {
-        if (m_UtmOrganized.size() > 0)
-        {
-            auto initial = *m_UtmOrganized.begin();
-            auto final = *m_UtmOrganized.rbegin();
-            return Utm::planarDistance(initial, final);
-
-        }
-        return {};
+        return Utm::planarDistance(m_boundingBox.upperLeft, m_boundingBox.bottomRight);
     }
-    static Box boundingBox()
-    {
-        if (m_UtmOrganized.size() > 0)
-        {
-            auto initial = *m_UtmOrganized.begin();
-            auto final = *m_UtmOrganized.rbegin();
-            if (initial.m_x > final.m_x)
-                std::swap(initial.m_x,final.m_x);
-            if (initial.m_y > final.m_y)
-                std::swap(initial.m_y,final.m_y);
-
-            qInfo() << "DISTANCE from BOUNDING bOX " << Utm::planarDistance(initial, final);
-
-            return {initial, final};
-        }
-        return {};
-    }
-
     Stops() = default;
     /*
         Calculate the following
@@ -254,8 +294,9 @@ public:
             QDomElement stop = stops.at(i).toElement();
             Stop st(stop);
             m_map[st.m_number.toInt()] = st;
-            m_UtmOrganized.insert(st.m_utm);
-            if(prevUtm.m_lat.isEmpty())
+            // m_UtmOrganized.insert(st.m_utm);
+            setBoundingBox(st.m_utm);
+            if(prevUtm.empty())
             {
                 prevUtm = st.m_utm;
                 continue;
