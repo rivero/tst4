@@ -122,7 +122,7 @@ public:
     Stops() = default;
     Stops(const QDomElement& root)
     {
-        QDomNodeList stops = root.elementsByTagName("stops");
+        QDomNodeList stops = root.elementsByTagName("stop");
         for (int i = 0; i < stops.count(); ++i)
         {
             QDomElement stop = stops.at(i).toElement();

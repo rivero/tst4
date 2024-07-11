@@ -62,5 +62,6 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     readers::readVariants();
+    readers::readStops();
     return a.exec();
 }
