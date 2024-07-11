@@ -48,21 +48,54 @@ public:
     }
 };
 
-class Geo
+struct Location
+{
+    QString m_lat, m_lon, m_xStr, m_yStr;
+    virtual void printLocation() const
+    {
+        qDebug() << "\t" << m_xStr << m_lat;
+        qDebug() << "\t" << m_yStr << m_lon;
+    }
+    void setLocation(const QDomElement& geographicElement, const QString& x, const QString& y)
+    {
+        m_xStr = x;
+        m_yStr = y;
+        m_lat = geographicElement.firstChildElement(m_xStr).text();
+        m_lon = geographicElement.firstChildElement(m_yStr).text();
+
+    }
+};
+
+class Geo : public Location
 {
 public:
-    QString m_lat, m_lon;
     void setGeo(const QDomElement& geographicElement)
     {
-        m_lat = geographicElement.firstChildElement("latitude").text();
-        m_lon = geographicElement.firstChildElement("longitude").text();
+        Location::setLocation(geographicElement, "latitude", "longitude");
+
     }
     virtual void dPrint() const
     {
         qDebug() << "Geo:";
-        qDebug() << "\tLatitude:" << m_lat;
-        qDebug() << "\tLongitude:" << m_lon;
+        printLocation();
     }
+
+};
+
+class Utm : public Location
+{
+public:
+    void setGeo(const QDomElement& geographicElement)
+    {
+        Location::setLocation(geographicElement, "x", "y");
+
+    }
+    virtual void dPrint() const
+    {
+        qDebug() << "Utm:";
+        printLocation();
+    }
+
 
 };
 
@@ -71,6 +104,7 @@ class Stop : public Id, public Abbr
     Street m_street;
     CrossStreet m_crossStreet;
     Geo m_geo;
+    Utm m_utm;
 public:
     Stop() = default;
     QString m_number, m_direction, m_side, m_sideAbbr;
@@ -91,11 +125,13 @@ public:
 
         // Extract geographic coordinates
         QDomElement geographicElement = root.firstChildElement("centre").firstChildElement("geographic");
+        QDomElement utmElement = root.firstChildElement("centre").firstChildElement("utm");
 
 
         m_street.setStreet(streetElement);
         m_crossStreet.setCrossStreet(crossStreetElement);
         m_geo.setGeo(geographicElement);
+        m_utm.setGeo(utmElement);
 
 
     }
@@ -111,6 +147,7 @@ public:
         m_street.dPrint();
         m_crossStreet.dPrint();
         m_geo.dPrint();
+        m_utm.dPrint();
 
     }
 };
@@ -128,9 +165,6 @@ public:
             QDomElement stop = stops.at(i).toElement();
             Stop st(stop);
             m_map[st.m_key] = st;
-
-            //            QString xlinkHref = variant.attribute("xlink:href");
-            //            qDebug() << "Variant" << i + 1 << "xlink:href:" << xlinkHref;
         }
     }
     virtual void dPrint() const
