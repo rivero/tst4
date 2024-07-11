@@ -104,12 +104,17 @@ namespace data
         qInfo() << "\nLongest Variant: [" << variant << "] : " << distance << " meters";
 
         qInfo() << "\n> Find the mid-way/half-distance point coordinates on the longest Variant by length.\n\
-                       * Output the Variant key, name, total length(meters), and the mid-point coordinates to console.";
+        * Output the Variant key, name, total length(meters), and the mid-point coordinates to console.";
         auto midPoint = midPoints[variant];
         qInfo() << "\nMid point for [" << variant << "] distance: " << midPoint.m_distance << "meters";
         midPoint.m_stop.m_geo.dPrint();
 
+        qInfo() << "> Find the furthest Stops from each other by crow-flies distance in all the above Variants\n\
+                       * Output the stop number, name, and distance from each other(meters) to console.";
         qInfo() << "\nMaximum Distance" << Stops::maxDistance();
+
+        qInfo() << "> Calculate the bounding box based on the Stops from all the above selected Routes and their Variants,\n\
+                       output the lower-left and upper right coordinates to consoles.";
         auto boundingBox = Stops::boundingBox();
         qInfo() << "\nBounding Box:\nUpper left";
         boundingBox.upperLeft.printLocation();
@@ -201,7 +206,7 @@ namespace readers
         StopsNames::loadStops(StopsNames::stop33);
         StopsNames::loadStops(StopsNames::stop60);
         StopsNames::loadStops(StopsNames::stopBLUE);
-        data::printStopsMap(false); // no long print
+        data::printStopsMap(true); // false for no long print
     }
 }
 

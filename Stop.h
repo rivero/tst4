@@ -52,6 +52,7 @@ public:
 
 class Location
 {
+protected:
     QString m_lat, m_lon, m_xStr, m_yStr;
     std::uint64_t m_x{}, m_y{};
 public:
@@ -71,7 +72,7 @@ public:
     {
         m_lon = l;
     }
-    bool empty() const
+    virtual bool empty() const
     {
         return m_lat.isEmpty();
     }
@@ -90,15 +91,21 @@ public:
         qDebug() << "\t" << m_xStr << m_lat;
         qDebug() << "\t" << m_yStr << m_lon;
     }
-    void setLocation(const QDomElement& geographicElement, const QString& x, const QString& y)
+    void setCoordinates(const QDomElement& geographicElement, const QString& x = "latitude", const QString& y = "longitude")
     {
         m_xStr = x;
         m_yStr = y;
         m_lat = geographicElement.firstChildElement(m_xStr).text();
         m_lon = geographicElement.firstChildElement(m_yStr).text();
-        m_x = std::stod(m_lat.toStdString());
-        m_y = std::stod(m_lon.toStdString());
     }
+    void setCenter(const QDomElement& geographicElement, const QString& x = "x", const QString& y = "y")
+    {
+        auto X = geographicElement.firstChildElement(x).text();
+        auto Y = geographicElement.firstChildElement(y).text();
+        m_x = X.toInt();
+        m_y = Y.toInt();
+    }
+
     std::uint64_t x() const
     {
         return m_x;
@@ -114,7 +121,31 @@ public:
             return m_x < l.x();
         return m_y < l.y();
     }
+    Location& operator=(const Location& other)
+    {
+        if (this != &other) // Check for self-assignment
+        {
+            m_lat = other.m_lat;
+            m_lon = other.m_lon;
+            m_xStr = other.m_xStr;
+            m_yStr = other.m_yStr;
+            m_x = other.m_x;
+            m_y = other.m_y;
+        }
+        return *this;
+    }
 
+    // Calculate planar distance
+    static double planarDistance(std::uint64_t E1, std::uint64_t N1, std::uint64_t E2, std::uint64_t N2)
+    {
+        std::uint64_t dE = E2 - E1;
+        std::uint64_t dN = N2 - N1;
+        return std::sqrt(dE * dE + dN * dN);
+    }
+    static double planarDistance(const Location& u1, const Location& u2)
+    {
+        return planarDistance(u1.x(), u1.y(), u2.x(), u2.y());
+    }
 };
 
 class Geo : public Location
@@ -122,8 +153,7 @@ class Geo : public Location
 public:
     void setGeo(const QDomElement& geographicElement)
     {
-        Location::setLocation(geographicElement, "latitude", "longitude");
-
+        Location::setCoordinates(geographicElement);
     }
     virtual void dPrint() const
     {
@@ -138,24 +168,23 @@ class Utm : public Location
 public:
     void setGeo(const QDomElement& geographicElement)
     {
-        Location::setLocation(geographicElement, "x", "y");
+        Location::setCenter(geographicElement);
+    }
+    virtual void printLocation() const
+    {
+        qDebug() << "\tx:" << m_x;
+        qDebug() << "\ty:" << m_y;
     }
     virtual void dPrint() const
     {
         qDebug() << "Utm:";
         printLocation();
     }
-    // Calculate planar distance
-    static double planarDistance(std::uint64_t E1, std::uint64_t N1, std::uint64_t E2, std::uint64_t N2)
+    virtual bool empty() const
     {
-        std::uint64_t dE = E2 - E1;
-        std::uint64_t dN = N2 - N1;
-        return std::sqrt(dE * dE + dN * dN);
+        return m_x == 0;
     }
-    static double planarDistance(const Location& u1, const Location& u2)
-    {
-        return planarDistance(u1.x(), u1.y(), u2.x(), u2.y());
-    }
+
 
 };
 
@@ -222,7 +251,6 @@ struct MidPoint
 struct Box
 {
     Location upperLeft{}, bottomRight{};
-    QString m_lat, m_lon;
 };
 
 class Stops
