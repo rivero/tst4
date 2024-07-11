@@ -1,5 +1,6 @@
 #ifndef STOP_H
 #define STOP_H
+#include <unordered_map>
 #include "Id.h"
 
 class Abbr
@@ -71,6 +72,7 @@ class Stop : public Id, public Abbr
     CrossStreet m_crossStreet;
     Geo m_geo;
 public:
+    Stop() = default;
     QString m_number, m_direction, m_side, m_sideAbbr;
     Stop(const QDomElement& root)
     {
@@ -110,6 +112,33 @@ public:
         m_crossStreet.dPrint();
         m_geo.dPrint();
 
+    }
+};
+
+class Stops
+{
+    std::unordered_map<QString, Stop> m_map;
+public:
+    Stops() = default;
+    Stops(const QDomElement& root)
+    {
+        QDomNodeList stops = root.elementsByTagName("stops");
+        for (int i = 0; i < stops.count(); ++i)
+        {
+            QDomElement stop = stops.at(i).toElement();
+            Stop st(stop);
+            m_map[st.m_key] = st;
+
+            //            QString xlinkHref = variant.attribute("xlink:href");
+            //            qDebug() << "Variant" << i + 1 << "xlink:href:" << xlinkHref;
+        }
+    }
+    virtual void dPrint() const
+    {
+        for( auto& [key, stop]: m_map)
+        {
+            stop.dPrint();
+        }
     }
 };
 

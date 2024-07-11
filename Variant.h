@@ -2,7 +2,7 @@
 #define VARIANT_H
 #include <unordered_map>
 #include "Id.h"
-
+extern const QString API_KEY;
 class Variant : public Id
 {
     QString m_destinations_xlink_ref;
@@ -20,12 +20,19 @@ public:
         Id::dPrint();
         qDebug() << "\tdestinations xlink:ref:" << m_destinations_xlink_ref;
     }
+    void printStopHttpRequest() const
+    {
+        QString stopsPath("https://api.winnipegtransit.com/v3/stops?variant=");
+        QString path = stopsPath + m_key + QString("&") + API_KEY;
+        qInfo() << path;
+    }
 };
 
 class Variants
 {
     std::unordered_map<QString, Variant> m_map;
 public:
+    Variants() = default;
     Variants(const QDomElement& root)
     {
         QDomNodeList variants = root.elementsByTagName("variant");
@@ -45,6 +52,14 @@ public:
         {
             variant.dPrint();
         }
+    }
+    void printStopHttpRequests() const
+    {
+        for( auto& [key, variant]: m_map)
+        {
+            variant.printStopHttpRequest();
+        }
+
     }
 };
 

@@ -34,12 +34,7 @@ bool FileReader::parseXML()
     return false;
 }
 
-QByteArray FileReader::data() const
-{
-    return m_bytes;
-}
-
-QDomElement FileReader::getRoot() const
+const QDomElement& FileReader::getRoot() const
 {
     return m_root;
 }

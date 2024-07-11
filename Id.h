@@ -2,7 +2,7 @@
 #define ID_H
 class Id
 {
-protected:
+public:
     QString m_key, m_name;
     void setId(const QDomElement& root)
     {

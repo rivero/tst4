@@ -8,9 +8,8 @@ class FileReader
 
 public:
     FileReader(const QString& fileName);
-    QByteArray data() const;
     bool parseXML();
-    QDomElement getRoot() const;
+    const QDomElement&  getRoot() const;
 };
 
 #endif // FILEREADER_H
