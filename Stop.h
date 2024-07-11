@@ -1,6 +1,8 @@
 #ifndef STOP_H
 #define STOP_H
-#include <unordered_map>
+
+#include <set>
+#include <algorithm>
 #include "Id.h"
 
 class Abbr
@@ -51,6 +53,7 @@ public:
 struct Location
 {
     QString m_lat, m_lon, m_xStr, m_yStr;
+    double m_x{}, m_y{};
     virtual void printLocation() const
     {
         qDebug() << "\t" << m_xStr << m_lat;
@@ -62,16 +65,25 @@ struct Location
         m_yStr = y;
         m_lat = geographicElement.firstChildElement(m_xStr).text();
         m_lon = geographicElement.firstChildElement(m_yStr).text();
-
+        m_x = std::stod(m_lat.toStdString());
+        m_y = std::stod(m_lon.toStdString());
     }
     double x() const
     {
-        return std::stod(m_lat.toStdString());
+        return m_x;
     }
     double y() const
     {
-        return std::stod(m_lon.toStdString());
+        return m_y;
     }
+
+    bool operator<(const Location& l) const
+    {
+        if (m_x != l.x())
+            return m_x < l.x();
+        return m_y < l.y();
+    }
+
 };
 
 class Geo : public Location
@@ -109,7 +121,7 @@ public:
         double dN = N2 - N1;
         return std::sqrt(dE * dE + dN * dN);
     }
-    static double planarDistance(const Utm& u1, const Utm& u2)
+    static double planarDistance(const Location& u1, const Location& u2)
     {
         return planarDistance(u1.x(), u1.y(), u2.x(), u2.y());
     }
@@ -176,12 +188,51 @@ struct MidPoint
     std::uint64_t m_distance{};
 };
 
+struct Box
+{
+    Location upperLeft{}, bottomRight{};
+};
+
 class Stops
 {
     std::map<int, Stop> m_map;
     std::uint64_t m_distance{};
     MidPoint m_midPoint;
+    static std::set<Location> m_UtmOrganized;
 public:
+    static const std::set<Location>& UtmOrganized()
+    {
+        return m_UtmOrganized;
+    }
+    static std::uint64_t maxDistance()
+    {
+        if (m_UtmOrganized.size() > 0)
+        {
+            auto initial = *m_UtmOrganized.begin();
+            auto final = *m_UtmOrganized.rbegin();
+            return Utm::planarDistance(initial, final);
+
+        }
+        return {};
+    }
+    static Box boundingBox()
+    {
+        if (m_UtmOrganized.size() > 0)
+        {
+            auto initial = *m_UtmOrganized.begin();
+            auto final = *m_UtmOrganized.rbegin();
+            if (initial.m_x > final.m_x)
+                std::swap(initial.m_x,final.m_x);
+            if (initial.m_y > final.m_y)
+                std::swap(initial.m_y,final.m_y);
+
+            qInfo() << "DISTANCE from BOUNDING bOX " << Utm::planarDistance(initial, final);
+
+            return {initial, final};
+        }
+        return {};
+    }
+
     Stops() = default;
     /*
         Calculate the following
@@ -203,6 +254,7 @@ public:
             QDomElement stop = stops.at(i).toElement();
             Stop st(stop);
             m_map[st.m_number.toInt()] = st;
+            m_UtmOrganized.insert(st.m_utm);
             if(prevUtm.m_lat.isEmpty())
             {
                 prevUtm = st.m_utm;

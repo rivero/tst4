@@ -25,6 +25,8 @@ sr.jrivero@gmail.com
 */
 const QString API_KEY("api-key=hDk1zowO1Y0FTNOXy3Ut");
 const QString Download_Folder("C:/tools/repos/tst4/xml/");
+std::set<Location> Stops::m_UtmOrganized;
+
 namespace data
 {
     template <typename T, typename U>
@@ -100,6 +102,13 @@ namespace data
         auto midPoint = midPoints[variant];
         qInfo() << "Mid point for " << variant << "distance" << midPoint.m_distance;
         midPoint.m_stop.m_geo.dPrint();
+
+        qInfo() << "Maximum Distance" << Stops::maxDistance();
+        auto boundingBox = Stops::boundingBox();
+        qInfo() << "Bounding Box: Upper left";
+        boundingBox.upperLeft.printLocation();
+        qInfo() << "Lower Right";
+        boundingBox.bottomRight.printLocation();
 
     }
 
