@@ -33,7 +33,12 @@ namespace data
     template <typename T, typename U>
     void readFile(T route, const QString& file)
     {
-        QString theFile = Download_Folder + file + QString("_") +  QString::number(route) +  ".xml";
+        QString theFile;
+        if(route == -1)
+            theFile = Download_Folder + file + QString("_BLUE") +  ".xml";
+        else
+            theFile = Download_Folder + file + QString("_") +  QString::number(route) +  ".xml";
+
         // looks like this? "C:/tools/repos/tst4/xml/variants_16.xml"
         FileReader reader(theFile);
         if (reader.parseXML())
@@ -46,14 +51,16 @@ namespace data
     unordered_map<QString, vector<Stops> > variantStopsMap;
     void readStopsFile(const QString& variant)
     {
-        // , "C:/tools/repos/tst4/xml/stops_16-0-ASTERISK.xml"
         QString file = Download_Folder + QString("stops_") + variant + ".xml";
+        qInfo() << "Reading stops file" << file;
         FileReader reader(file);
         if (reader.parseXML())
         {
             Stops stops(reader.getRoot());
             variantStopsMap[variant].push_back(stops);
         }
+        else
+            qWarning() << "Error reading/parsing file" << file;
     }
 
     set < pair<uint64_t, QString> > distances;
@@ -111,27 +118,74 @@ namespace readers
     }
 
     // This will get me all the data I need to download the stops.
-    // See:
-    //  C:\tools\repos\tst4\xml
-    // Where I stored them.
+    // See: variable Download_Folder Where I stored them.
     void readVariants()
     {
         data::readFile<int, Variants>(16, "variants");
+        data::readFile<int, Variants>(18, "variants");
+        data::readFile<int, Variants>(33, "variants");
+        data::readFile<int, Variants>(60, "variants");
+        data::readFile<int, Variants>(-1, "variants");
         printStopHttpRequests<int, Variants>();
     }
-    // Stops downloaded. Read, and calculate distance
+
+    namespace StopsNames
+    {
+        vector<QString> stop18
+            {
+                "18-0-J",
+                "18-0-R",
+                "18-0-T",
+                "18-1-A",
+                "18-1-C",
+                "18-1-E"
+            };
+
+        vector<QString> stop33
+            {
+                "33-0-J",
+                "33-0-M",
+                "33-1-D",
+                "33-1-D2",
+                "33-1-M"
+            };
+        vector<QString> stop60
+            {
+                "60-0-U",
+                "60-1-D"
+            };
+        vector<QString> stopBLUE
+            {
+                "BLUE-0-S",
+                "BLUE-0-U",
+                "BLUE-1-D"
+            };
+
+        void loadStops(const vector<QString>& vec)
+        {
+            for(auto& file : vec)
+            {
+                data::readStopsFile(file);
+            }
+        }
+    }
+
     void readStops()
     {
         data::readStopsFile("16-0-ASTERISK");
-        //data::readStopsFile("16-0-B");
-        //data::readStopsFile("16-0-K");
-        //data::readStopsFile("16-0-M");
-        //data::readStopsFile("16-1-ASTERISK");
-        //data::readStopsFile("16-1-HASHHASH");
-        //data::readStopsFile("16-1-K");
-        //data::readStopsFile("16-1-L");
-        //data::readStopsFile("16-1-P");
-        //data::readStopsFile("16-1-V");
+        data::readStopsFile("16-0-B");
+        data::readStopsFile("16-0-K");
+        data::readStopsFile("16-0-M");
+        data::readStopsFile("16-1-ASTERISK");
+        data::readStopsFile("16-1-HASHHASH");
+        data::readStopsFile("16-1-K");
+        data::readStopsFile("16-1-L");
+        data::readStopsFile("16-1-P");
+        data::readStopsFile("16-1-V");
+        StopsNames::loadStops(StopsNames::stop18);
+        StopsNames::loadStops(StopsNames::stop33);
+        StopsNames::loadStops(StopsNames::stop60);
+        StopsNames::loadStops(StopsNames::stopBLUE);
         data::printStopsMap(false); // no long print
     }
 }
@@ -139,7 +193,7 @@ namespace readers
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    readers::readVariants();
+    // readers::readVariants(); only needed first time
     readers::readStops();
     return a.exec();
 }
