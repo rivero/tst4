@@ -1,6 +1,3 @@
-Certainly! Below is the `readme.md` file for the provided code snippet:
-
----
 
 # Bus Variant Analysis
 
