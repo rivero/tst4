@@ -96,7 +96,6 @@ public:
     void setGeo(const QDomElement& geographicElement)
     {
         Location::setLocation(geographicElement, "x", "y");
-
     }
     virtual void dPrint() const
     {
@@ -174,19 +173,26 @@ public:
 class Stops
 {
     std::map<int, Stop> m_map;
-    std::vector<Utm> m_utms;
     std::uint64_t m_distance{};
 public:
     Stops() = default;
     Stops(const QDomElement& root)
     {
         QDomNodeList stops = root.elementsByTagName("stop");
+        Utm prevUtm;
         for (int i = 0; i < stops.count(); ++i)
         {
             QDomElement stop = stops.at(i).toElement();
             Stop st(stop);
             m_map[std::stoi(st.m_number.toStdString())] = st;
-            m_utms.push_back(st.m_utm);
+            if(prevUtm.m_lat.isEmpty())
+            {
+                prevUtm = st.m_utm;
+                continue;
+            }
+            Utm thisUtm = st.m_utm;
+            m_distance += Utm::planarDistance(prevUtm, thisUtm);
+            prevUtm = thisUtm;
         }
     }
     virtual void dPrint() const
@@ -199,15 +205,7 @@ public:
     }
     std::uint64_t calcDistance()
     {
-        auto prevUtm = m_utms[0];
-        for(size_t i = 1; i < m_utms.size(); i++)
-        {
-            auto thisUtm = m_utms[i];
-            m_distance += Utm::planarDistance(prevUtm, thisUtm);
-            prevUtm = thisUtm;
-        }
         return m_distance;
-
     }
 };
 
