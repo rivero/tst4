@@ -203,7 +203,7 @@ public:
         for(size_t i = 1; i < m_utms.size(); i++)
         {
             auto thisUtm = m_utms[i];
-            m_distance += Utm::planarDistance(thisUtm, prevUtm);
+            m_distance += Utm::planarDistance(prevUtm, thisUtm);
             prevUtm = thisUtm;
         }
         return m_distance;

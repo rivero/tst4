@@ -11,6 +11,18 @@
 #include <set>
 
 using namespace std;
+/*
+I had issues installing OpenSSL and lost most of the first day.
+
+I had to download the relevant files manually and save them to Dwoanload_Folder.
+
+Thanks
+
+Jason J. Rivero
+sr.jrivero@gmail.com
+1.778.552.5212
+
+*/
 const QString API_KEY("api-key=hDk1zowO1Y0FTNOXy3Ut");
 const QString Download_Folder("C:/tools/repos/tst4/xml/");
 namespace data
