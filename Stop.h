@@ -64,6 +64,14 @@ struct Location
         m_lon = geographicElement.firstChildElement(m_yStr).text();
 
     }
+    double x() const
+    {
+        return std::stod(m_lat.toStdString());
+    }
+    double y() const
+    {
+        return std::stod(m_lon.toStdString());
+    }
 };
 
 class Geo : public Location
@@ -95,7 +103,17 @@ public:
         qDebug() << "Utm:";
         printLocation();
     }
-
+    // Calculate planar distance
+    static double planarDistance(double E1, double N1, double E2, double N2)
+    {
+        double dE = E2 - E1;
+        double dN = N2 - N1;
+        return std::sqrt(dE * dE + dN * dN);
+    }
+    static double planarDistance(const Utm& u1, const Utm& u2)
+    {
+        return planarDistance(u1.x(), u1.y(), u2.x(), u2.y());
+    }
 
 };
 
@@ -104,8 +122,9 @@ class Stop : public Id, public Abbr
     Street m_street;
     CrossStreet m_crossStreet;
     Geo m_geo;
-    Utm m_utm;
 public:
+    Utm m_utm;
+
     Stop() = default;
     QString m_number, m_direction, m_side, m_sideAbbr;
     Stop(const QDomElement& root)
@@ -154,7 +173,9 @@ public:
 
 class Stops
 {
-    std::unordered_map<QString, Stop> m_map;
+    std::map<int, Stop> m_map;
+    std::vector<Utm> m_utms;
+    std::uint64_t m_distance{};
 public:
     Stops() = default;
     Stops(const QDomElement& root)
@@ -164,7 +185,8 @@ public:
         {
             QDomElement stop = stops.at(i).toElement();
             Stop st(stop);
-            m_map[st.m_key] = st;
+            m_map[std::stoi(st.m_number.toStdString())] = st;
+            m_utms.push_back(st.m_utm);
         }
     }
     virtual void dPrint() const
@@ -173,6 +195,18 @@ public:
         {
             stop.dPrint();
         }
+    }
+    std::uint64_t calcDistance()
+    {
+        auto prevUtm = m_utms[0];
+        for(size_t i = 1; i < m_utms.size(); i++)
+        {
+            auto thisUtm = m_utms[i];
+            m_distance += Utm::planarDistance(thisUtm, prevUtm);
+            prevUtm = thisUtm;
+        }
+        return m_distance;
+
     }
 };
 

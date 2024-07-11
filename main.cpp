@@ -7,12 +7,14 @@
 #include <Stop.h>
 #include <filereader.h>
 #include <unordered_map>
+#include <vector>
+#include <set>
+
 using namespace std;
 const QString API_KEY("api-key=hDk1zowO1Y0FTNOXy3Ut");
 
 namespace data
 {
-    // This will get me all the data I need to download the stops.
     template <typename T, typename U>
     unordered_map<T,U> variantsMap;
 
@@ -26,35 +28,62 @@ namespace data
             variantsMap<T,U>[route] = variants;
         }
     }
+
+    unordered_map<QString, vector<Stops> > variantStopsMap;
+    void readStopsFile(const QString& variant, const QString& file)
+    {
+        FileReader reader(file);
+        if (reader.parseXML())
+        {
+            Stops stops(reader.getRoot());
+            variantStopsMap[variant].push_back(stops);
+        }
+    }
+
+    set < pair<uint64_t, QString> > distances;
+    void printStopsMap()
+    {
+        for(auto& [variant, stopsVec]: variantStopsMap)
+        {
+            qDebug() << "Variant: " << variant;
+            for(auto& stops: stopsVec)
+            {
+                stops.dPrint();
+                auto dist = stops.calcDistance();
+                distances.insert({dist, variant});
+                qDebug() << "Total distance: " << dist;
+            }
+        }
+
+        auto biggest = *distances.rbegin();
+        qInfo() << "Largest distance so far: [" << biggest.second << "] : " << biggest.first << " meters";
+
+    }
+
 }
 
 namespace readers
 {
     template <typename T, typename U>
-    void printHttp()
+    void printStopHttpRequests()
     {
         for (auto& [key, value] : data::variantsMap<T,U> )
         {
             value.printStopHttpRequests(); // To download the stops
         }
     }
-    template <typename T, typename U>
-    void print()
-    {
-        for (auto& [key, value] : data::variantsMap<T,U> )
-        {
-            value.dPrint(); // To download the stops
-        }
-    }
+
+    // This will get me all the data I need to download the stops.
     void readVariants()
     {
         data::readFile<int, Variants>(16, "C:/tools/repos/tst4/xml/variants_16.xml");
-        printHttp<int, Variants>();
+        printStopHttpRequests<int, Variants>();
     }
+    // Stops downloaded. Read, and calculate distance
     void readStops()
     {
-        data::readFile<QString, Stops>("16-0-ASTERISK", "C:/tools/repos/tst4/xml/stops_16-0-ASTERISK.xml");
-        print<QString, Stops>();
+        data::readStopsFile("16-0-ASTERISK", "C:/tools/repos/tst4/xml/stops_16-0-ASTERISK.xml");
+        data::printStopsMap();
     }
 }
 
