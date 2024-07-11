@@ -41,13 +41,15 @@ namespace data
     }
 
     set < pair<uint64_t, QString> > distances;
-    void printStopsMap()
+    void printStopsMap(bool longPrint = false)
     {
         for(auto& [variant, stopsVec]: variantStopsMap)
         {
             qDebug() << "Variant: " << variant;
             for(auto& stops: stopsVec)
             {
+                if (longPrint)
+                    stops.m_longPrint = longPrint;
                 stops.dPrint();
                 auto dist = stops.calcDistance();
                 distances.insert({dist, variant});
@@ -67,13 +69,17 @@ namespace readers
     template <typename T, typename U>
     void printStopHttpRequests()
     {
-        for (auto& [key, value] : data::variantsMap<T,U> )
+        for (auto& [route, value] : data::variantsMap<T,U> )
         {
+            qInfo() << "Values for downloading for route:" << route << " please dowload them into: C:/tools/repos/tst4/xml";
             value.printStopHttpRequests(); // To download the stops
         }
     }
 
     // This will get me all the data I need to download the stops.
+    // See:
+    //  C:\tools\repos\tst4\xml
+    // Where I stored them.
     void readVariants()
     {
         data::readFile<int, Variants>(16, "C:/tools/repos/tst4/xml/variants_16.xml");
@@ -83,7 +89,9 @@ namespace readers
     void readStops()
     {
         data::readStopsFile("16-0-ASTERISK", "C:/tools/repos/tst4/xml/stops_16-0-ASTERISK.xml");
-        data::printStopsMap();
+        data::readStopsFile("16-0-B", "C:/tools/repos/tst4/xml/stops_16-0-B.xml");
+        data::readStopsFile("16-0-K", "C:/tools/repos/tst4/xml/stops_16-0-X.xml");
+        data::printStopsMap(false); // no long print
     }
 }
 

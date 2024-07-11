@@ -177,6 +177,7 @@ class Stops
     std::vector<Utm> m_utms;
     std::uint64_t m_distance{};
 public:
+    bool m_longPrint{};
     Stops() = default;
     Stops(const QDomElement& root)
     {
@@ -191,8 +192,12 @@ public:
     }
     virtual void dPrint() const
     {
+        if(!m_longPrint)
+            return;
+
         for( auto& [key, stop]: m_map)
         {
+            qInfo() << "Printing key:" << key;
             stop.dPrint();
         }
     }
