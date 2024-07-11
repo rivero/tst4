@@ -52,6 +52,20 @@ public:
 
 class Location
 {
+    void setCoordinates(const QDomElement& geographicElement, const QString& x = "latitude", const QString& y = "longitude")
+    {
+        m_xStr = x;
+        m_yStr = y;
+        m_lat = geographicElement.firstChildElement(m_xStr).text();
+        m_lon = geographicElement.firstChildElement(m_yStr).text();
+    }
+    void setCenter(const QDomElement& geographicElement, const QString& x = "x", const QString& y = "y")
+    {
+        auto X = geographicElement.firstChildElement(x).text();
+        auto Y = geographicElement.firstChildElement(y).text();
+        m_x = X.toInt();
+        m_y = Y.toInt();
+    }
 protected:
     QString m_lat, m_lon, m_xStr, m_yStr;
     std::uint64_t m_x{}, m_y{};
@@ -91,19 +105,11 @@ public:
         qDebug() << "\t" << m_xStr << m_lat;
         qDebug() << "\t" << m_yStr << m_lon;
     }
-    void setCoordinates(const QDomElement& geographicElement, const QString& x = "latitude", const QString& y = "longitude")
+
+    void setValues(const QDomElement& geographicElement)
     {
-        m_xStr = x;
-        m_yStr = y;
-        m_lat = geographicElement.firstChildElement(m_xStr).text();
-        m_lon = geographicElement.firstChildElement(m_yStr).text();
-    }
-    void setCenter(const QDomElement& geographicElement, const QString& x = "x", const QString& y = "y")
-    {
-        auto X = geographicElement.firstChildElement(x).text();
-        auto Y = geographicElement.firstChildElement(y).text();
-        m_x = X.toInt();
-        m_y = Y.toInt();
+        setCoordinates(geographicElement);
+        setCenter(geographicElement);
     }
 
     std::uint64_t x() const
@@ -153,7 +159,7 @@ class Geo : public Location
 public:
     void setGeo(const QDomElement& geographicElement)
     {
-        Location::setCoordinates(geographicElement);
+        Location::setValues(geographicElement);
     }
     virtual void dPrint() const
     {
@@ -168,7 +174,7 @@ class Utm : public Location
 public:
     void setGeo(const QDomElement& geographicElement)
     {
-        Location::setCenter(geographicElement);
+        Location::setValues(geographicElement);
     }
     virtual void printLocation() const
     {

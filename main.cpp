@@ -113,7 +113,7 @@ namespace data
                        * Output the stop number, name, and distance from each other(meters) to console.";
         qInfo() << "\nMaximum Distance" << Stops::maxDistance();
 
-        qInfo() << "> Calculate the bounding box based on the Stops from all the above selected Routes and their Variants,\n\
+        qInfo() << "\n> Calculate the bounding box based on the Stops from all the above selected Routes and their Variants,\n\
                        output the lower-left and upper right coordinates to consoles.";
         auto boundingBox = Stops::boundingBox();
         qInfo() << "\nBounding Box:\nUpper left";
